@@ -22,21 +22,14 @@ namespace _Scripts.Brains
         
         [Tooltip("Puntos de patrulla para el movimiento perpetuo.")]
         [SerializeField] private Transform[] waypoints; 
-        
-        // Índice interno para saber a qué punto de la lista 'waypoints' nos dirigimos
-        private int _indexWaypointActual = 0;
+        private int indexWaypointActual = 0;
 
-        
-        /*  LÓGICA DE MÁQUINA DE ESTADOS 
-         Aquí guardamos el estado actual (Rastreo, Persecución, etc.)*/
-        private IEstado _estadoActual; 
+        // --- LÓGICA DE ESTADOS ---
+        private IEstado _estadoActual; // El "canal" de radio que suena ahora
 
         [Header("Reloj de Recuperación")]
-        // Contador de segundos para llegar al minuto de enfriamiento
-        private float _cronometroSesentaSeg = 0f;
-        
-        // Guardamos el nivel de fase actual (1, 2, 3...) para pasárselo al SO en el Tick
-        private int _nivelMiedoActual = 1;
+        private float cronometroSesentaSeg = 0f;
+        private int nivelMiedoActual = 1;
 
         /* *
          * MÉTODO: Start
@@ -44,19 +37,10 @@ namespace _Scripts.Brains
          */
         private void Start()
         {
-            /*
-             // CÓDIGO ANIDADO (Indeseado)
-                   if (data != null) {
-                       // Todo el código vive "atrapado" dentro de llaves
-                       data.OnSubirFase += HandleSubirFase;
-                   }
-             */
-            //CODIGO PLANO (Profesional)
-            if (!data) return; // Sino hay datos sal de la funcion ahora mismo.
-            // El resto del código respira libre, sin estar dentro de un if
-            // SUSCRIPCIÓN (La Radio): Le decimos al SO que nos avise si hay cambios de fase
-            data.OnSubirFase += HandleSubirFase;
-            data.OnBajarFase += HandleBajarFase;
+            if (data != null)
+            {
+                data.OnSubirFase += HandleSubirFase;
+                data.OnBajarFase += HandleBajarFase;
                 
             // ESTADO INICIAL: Siempre empezamos buscando (Rastreo)
             // 'this' le pasa este mismo cerebro al estado para que pueda controlarlo
@@ -69,12 +53,7 @@ namespace _Scripts.Brains
          */
         private void Update()
         {
-            /* if (data == null): Es una comparación explícita.
-              if (!data): Es la forma abreviada de Unity. Internamente,
-             Unity hace una comprobación más profunda que un simple null de C#.
-             Verifica si el objeto "nativo" (el que vive en el motor) sigue vivo.*/
-            // Protección: Si no hay datos, no hacemos nada (Evita errores en consola)
-            if (!data) return;
+            if (data is null) return;
 
             // 1. Manejamos el tiempo para el enfriamiento de 60s
             ManejarCronometroRecuperacion();
@@ -113,24 +92,14 @@ namespace _Scripts.Brains
             _estadoActual.Entrar();
         }
 
-        /* *
-         * MÉTODO: ManejarCronometroRecuperacion
-         * Controla el enfriamiento por Ticks. Ahorra CPU al no calcular enfriamiento por frame.
-         */
         // ReSharper disable Unity.PerformanceAnalysis
         private void ManejarCronometroRecuperacion()
         {
-            // Acumulamos el tiempo real pasado desde el último frame
-            _cronometroSesentaSeg += Time.deltaTime;
-
-            // Si llegamos al umbral de 60 segundos diseñado...
-            if (_cronometroSesentaSeg >= 60f)
+            cronometroSesentaSeg += Time.deltaTime;
+            if (cronometroSesentaSeg >= 60f)
             {
-                // Llamamos al SO para que aplique la fórmula (1/3 * 1/miedo)
-                data.EjecutarTickDeRecuperacion(_nivelMiedoActual);
-                
-                // Reseteamos el reloj para el próximo minuto
-                _cronometroSesentaSeg = 0f;
+                data.EjecutarTickDeRecuperacion(nivelMiedoActual);
+                cronometroSesentaSeg = 0f;
             }
         }
 
@@ -152,19 +121,7 @@ namespace _Scripts.Brains
             {
                 destino = data.posicionSospechosa;
             }
-            else
-            {
-                destino = waypoints[_indexWaypointActual].position;
 
-                // Si estamos muy cerca del waypoint actual, saltamos al siguiente en la lista
-                if (Vector3.Distance(transform.position, destino) < 0.5f)
-                {
-                    // El operador '%' hace que al llegar al final de la lista, vuelva al 0 (Bucle)
-                    _indexWaypointActual = (_indexWaypointActual + 1) % waypoints.Length;
-                }
-            }
-
-            // APLICACIÓN FÍSICA: Movemos el objeto hacia el destino calculado
             transform.position = Vector3.MoveTowards(transform.position, destino, velocidadBase * Time.deltaTime);
             
             // Hacemos que el enemigo siempre mire hacia donde camina (excepto en el eje Y para no rotar raro)
@@ -176,21 +133,16 @@ namespace _Scripts.Brains
         // Se dispara cuando la intuición llega a 1.0
         private void HandleSubirFase()
         {
-            _nivelMiedoActual++;
-            Debug.Log($"<color=orange>RADIO: El enemigo subió al Nivel {_nivelMiedoActual}</color>");
-            // Nota: Aquí el cerebro decidirá qué nuevo estado instanciar en el futuro
+            nivelMiedoActual++;
+            // Aquí más adelante crearemos: CambiarEstado(new EstadoSigilo(this));
+            Debug.Log($"Subiendo a fase {nivelMiedoActual}");
         }
 
         // Se dispara cuando la intuición baja a 0.0 tras un Tick
         private void HandleBajarFase()
         {
-            // Aseguramos que el nivel nunca sea menor a 1
-            _nivelMiedoActual = Mathf.Max(1, _nivelMiedoActual - 1);
-            
-            // Si bajamos al nivel base, nos forzamos a volver a Rastreo
-            if(_nivelMiedoActual == 1) CambiarEstado(new EstadoRastreo(this));
-            
-            Debug.Log($"<color=cyan>RADIO: El enemigo bajó al Nivel {_nivelMiedoActual}</color>");
+            nivelMiedoActual = Mathf.Max(1, nivelMiedoActual - 1);
+            if(nivelMiedoActual == 1) CambiarEstado(new EstadoRastreo(this));
         }
 
         /* *
