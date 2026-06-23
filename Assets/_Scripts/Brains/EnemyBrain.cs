@@ -11,7 +11,7 @@ namespace _Scripts.Brains
      * DESCRIPCIÓN: Actúa como el "Cuerpo" y "Contexto" de la IA (Hardware). 
      * No decide qué hacer por sí mismo, sino que delega esa tarea a un objeto IEstado.
      * Mantiene vivo el cronómetro de 60s para el enfriamiento.
-     */
+     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
     public class EnemyBrain : MonoBehaviour
     {
         [Header("Referencias de Datos")]
@@ -31,13 +31,14 @@ namespace _Scripts.Brains
         [SerializeField] private Transform[] waypoints; 
         public Transform[] Waypoints => waypoints; // Propiedad pública para los Estados
         
+
         [Header("Instintos Base")]
         [Tooltip("Transform del jugador para el Olfato")]
         [SerializeField] private Transform transformJugador;
         [Tooltip("Distancia a la que el enemigo mata instantáneamente")]
         [SerializeField] private float distanciaOlfato = 1.5f;
 
-        /*  LÓGICA DE MÁQUINA DE ESTADOS e OPTIMIZACIÓN (CACHING) */
+        /* LÓGICA DE MÁQUINA DE ESTADOS e OPTIMIZACIÓN (CACHING) */
         private IEstado _estadoActual; 
         
         // Cacheamos las instancias de los estados para evitar asignaciones de memoria (GC Allocations)
@@ -50,7 +51,7 @@ namespace _Scripts.Brains
         // Guardamos el nivel de fase actual (1, 2, 3...) para pasárselo al SO en el Tick
         private int _nivelMiedoActual = 1;
 
-        /* *
+        /* * *
          * MÉTODO: Start
          * Se ejecuta al nacer. Configuramos los estados cacheando referencias y el estado inicial.
          */
@@ -74,7 +75,7 @@ namespace _Scripts.Brains
             CambiarEstado(_estadoRastreo);
         }
 
-        /* *
+        /* * *
          * MÉTODO: Update
          * Ejecución por frame. Mantenemos el pulso de los relojes y el estado.
          */
@@ -110,7 +111,7 @@ namespace _Scripts.Brains
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
 
-        /* *
+        /* * *
          * MÉTODO: ActualizarVelocidad
          * Función pública para que los ESTADOS puedan cambiar la velocidad del NavMeshAgent.
          */
@@ -123,7 +124,7 @@ namespace _Scripts.Brains
             }
         }
 
-        /* *
+        /* * *
          * MÉTODO: MoverHacia
          * Función pública para que los ESTADOS ordenen el destino al NavMeshAgent.
          */
@@ -135,7 +136,7 @@ namespace _Scripts.Brains
             }
         }
 
-        /* *
+        /* * *
          * MÉTODO: CambiarEstado
          * Transición limpia de estados reutilizando referencias existentes.
          */
@@ -146,7 +147,7 @@ namespace _Scripts.Brains
             _estadoActual.Entrar();
         }
 
-        /* *
+        /* * *
          * MÉTODO: ManejarCronometroRecuperacion
          * Controla el enfriamiento por Ticks.
          */
@@ -180,6 +181,11 @@ namespace _Scripts.Brains
             Debug.Log($"<color=cyan>RADIO: El enemigo bajó al Nivel {_nivelMiedoActual}</color>");
         }
 
+        /* * *
+         * MÉTODO DE LIMPIEZA: OnDestroy
+         * Se ejecuta si matamos al enemigo o cambiamos de escena.
+         * Desconecta los cables de radio para no causar errores de memoria.
+         */
         private void OnDestroy()
         {
             if (data != null)
