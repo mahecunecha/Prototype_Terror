@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI_Inicio/MenuInicio.uss?fileID=7433441132597879392&amp;guid=9655d613110827a83ae6327c73cfdb95&amp;type=3#MenuInicio" />
+    <ui:VisualElement class="pantalla-completa" picking-mode="Ignore">
+        <ui:VisualElement class="contenedor-centrado" picking-mode="Ignore">
+            <ui:Label text="PROTOTYPE TERROR" class="titulo-juego" />
+            <ui:Button text="ENTRAR AL HORROR" parse-escape-sequences="true" display-tooltip-when-elided="true" name="btnJugar" picking-mode="Position" style="position: absolute; height: 33px; top: 74px; -unity-text-align: middle-right;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

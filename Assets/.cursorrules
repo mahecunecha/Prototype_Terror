@@ -1,0 +1,20 @@
+# MANUAL DE OPERACIÓN DE UNITY & ANTIGRAVITY (MCP)
+
+## 1. Directrices de Optimización de Tokens y Rendimiento
+- **Diagnóstico Obligatorio:** Antes de proponer modificaciones de código o corregir errores de compilación/ejecución, DEBES inspeccionar el estado real del proyecto usando 'read_console' o los recursos de escena de GameObject. No adivines soluciones sin ver los logs.
+- **Uso de Lotes (Batching):** Para cualquier tarea que implique crear, mover o modificar más de 2 objetos o componentes secuencialmente, utiliza obligatoriamente la herramienta 'batch_execute'. No realices múltiples llamadas secuenciales a herramientas individuales.
+- **Modificaciones Quirúrgicas:** Para editar scripts de C#, utiliza prioritariamente la herramienta 'script_apply_edits' con operaciones enfocadas ('replace_method', 'insert_method') en lugar de reescribir o reemplazar archivos de código completos.
+- **Validación de APIs en Vivo:** Si necesitas usar clases o métodos de paquetes específicos (como Cinemachine, URP o el nuevo Input System), verifica su existencia y firma exacta primero mediante 'unity_reflect' antes de escribir código.
+- **Control de Capturas Visuales:** Limita el uso del parámetro 'include_image=true' en capturas de pantalla ('manage_camera' o 'manage_ui') estrictamente a validaciones visuales críticas que requiera el usuario. Prefiero comprobar jerarquías o datos puros para ahorrar contexto de tokens.
+
+## 2. Reglas del Chasis y Arquitectura del Juego (Prototype Terror)
+- **Nombres Clave Obligatorios:** Respeta minuciosamente el Diccionario de Identidad del proyecto:
+  * Estados del Player (FasePlayer): Alerta, Sobresalto, Colapso, Horror.
+  * Estados del Enemigo (FaseEnemigo): Rastreo, Sigilo, Persecucion, SedDeSangre.
+  * Variable de Control Global: 'intuicion' (un acumulador de tipo float de 0.0 a 1.0 dentro del ScriptableObject 'IntuicionSystem').
+- **Arquitectura de la IA (EnemyBrain):** Los estados de la IA del enemigo deben desacoplarse del jugador e implementar obligatoriamente la interfaz 'IEstado' (con sus contratos Entrar, Ejecutar, Salir).
+- **Rendimiento de Eventos:** Prohíbe el uso de ciclos 'Update()' innecesarios en scripts de interfaz o escucha de datos; toda actualización de estado físico, de miedo o de interfaz debe responder de forma pasiva a eventos o cambios del ScriptableObject.
+- **Código Limpio:** Todos los scripts generados deben incluir comentarios estructurados en español detallando la lógica del chasis y finalizar con una línea en blanco (Render Final Newline).
+
+## 3. Interfaces con UI Toolkit
+- **Estructura UXML:** Asegúrate de utilizar siempre el prefijo de namespace '<ui:Style>' para añadir hojas de estilos en los archivos UXML. Nunca uses etiquetas '<Style>' desnudas porque rompen el UI Builder de Unity.

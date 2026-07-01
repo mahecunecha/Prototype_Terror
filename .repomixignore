@@ -1,0 +1,16 @@
+# Excluir carpetas pesadas o inútiles de Unity
+Library/
+Temp/
+Obj/
+Logs/
+UserSettings/
+MemoryCaptures/
+Builds/
+*.meta
+*.unitypackage
+*.asset
+*.prefab
+UserSettings/
+Packages/
+ProjectSettings/
+*.meta
