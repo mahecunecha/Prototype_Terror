@@ -1,6 +1,7 @@
 using _Scripts.Player;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.InputSystem;
 // LINEA NUEVA: Permite al script tener acceso directo a las herramientas de cámara de Cinemachine
 using Cinemachine;
@@ -52,8 +53,7 @@ namespace _Scripts.UI
         private MenuState _estado = MenuState.Gameplay;
 
         // Constantes: Textos fijos que no van a cambiar durante la ejecución del código
-        private const string TituloMenu = "Soporte";
-        private const string TextoCerrar = "Cerrar";
+        
 
         private void Awake()
         {
@@ -97,10 +97,24 @@ namespace _Scripts.UI
                 cameraPov = cameraProvider.GetComponentInChildren<CinemachinePOV>();
         }
 
-        private void Start()
+private void Start()
+{
+    if (menuPanel != null)
+    {
+        Button[] botones = menuPanel.GetComponentsInChildren<Button>(true);
+        foreach (Button b in botones)
         {
-            EntrarModoGameplay();
+            if (b.gameObject.name == "Boton_Jugar_Reanudar")
+            {
+                b.onClick.RemoveListener(OnClickJugarOReanudar);
+                b.onClick.AddListener(OnClickJugarOReanudar);
+                break;
+            }
         }
+    }
+
+    EntrarModoGameplay();
+}
 
         private void OnDestroy()
         {
@@ -161,17 +175,17 @@ namespace _Scripts.UI
             ConfigurarCamara(true);
         }
 
-        private void EntrarModoMenuAbierto()
-        {
-            _estado = MenuState.MenuAbierto;
+private void EntrarModoMenuAbierto()
+{
+    _estado = MenuState.MenuAbierto;
 
-            MostrarMenu(true);
-            ConfigurarTextos(TituloMenu, TextoCerrar);
-            ConfigurarCursor(true);
-            ActivarMapaUI();
-            ConfigurarJugador(false);
-            ConfigurarCamara(false);
-        }
+    MostrarMenu(true);
+    // ConfigurarTextos(TituloMenu, TextoCerrar); // Eliminado para no sobreescribir el diseño del usuario
+    ConfigurarCursor(true);
+    ActivarMapaUI();
+    ConfigurarJugador(false);
+    ConfigurarCamara(false);
+}
 
         // --- SUB-FUNCIONES AUXILIARES DE CONFIGURACIÓN ---
 
