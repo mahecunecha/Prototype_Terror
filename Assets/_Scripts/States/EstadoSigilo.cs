@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using _Scripts.Interfaces;
 using _Scripts.Brains;
+using _Scripts.Systems;
 
 namespace _Scripts.States
 {
@@ -9,15 +10,16 @@ namespace _Scripts.States
     {
         private readonly EnemyBrain _brain;
 
-        // 1. Variables de Clase y Sub-estados
-        public enum SubFaseSigilo { Acercamiento, Escaneo, MicroPatrulla }
+        private enum SubFaseSigilo { Intercepcion, SiguiendoRastro, Escaneo, MicroPatrulla }
         private SubFaseSigilo _subFaseActual;
 
-        private readonly float _velocidadSigilo = 5.0f;
-        
+        private Vector3 _destinoActual;
         private float _temporizadorEscaneo = 0f;
         private Vector3[] _puntosMicroPatrulla = new Vector3[3];
         private int _indexPatrulla = 0;
+
+        private const float VelocidadSigilo = 5.0f;
+        private const float VelocidadIntercepcion = 10.0f;
 
         public EstadoSigilo(EnemyBrain brain)
         {
@@ -26,27 +28,61 @@ namespace _Scripts.States
 
         public void Entrar()
         {
-            // 2. Método Entrar()
             Debug.Log("<color=orange>Enemigo entrando en fase de SIGILO.</color>");
-            _brain.ActualizarVelocidad(_velocidadSigilo);
-            _subFaseActual = SubFaseSigilo.Acercamiento;
-            _brain.MoverHacia(_brain.Data.posicionSospechosa);
-            
-            _temporizadorEscaneo = 0f;
+
+            if (GestorRastro.Instance.TryObtenerMigaja(out _destinoActual))
+            {
+                float distancia = Vector3.Distance(_destinoActual, _brain.puntoSalida.position);
+                Debug.Log($"<color=yellow>[SIGILO]</color> Evaluando migaja en {_destinoActual}. Distancia a Salida: {distancia}m.");
+
+                if (distancia < 15.0f)
+                {
+                    Debug.Log("<color=red>[INTERCEPCIÓN]</color> ¡Jugador cerca de la meta! Corriendo a Emboscada.");
+                    _subFaseActual = SubFaseSigilo.Intercepcion;
+                    _brain.ActualizarVelocidad(VelocidadIntercepcion);
+                    _brain.MoverHacia(_brain.puntoEmboscada.position);
+                }
+                else
+                {
+                    Debug.Log("<color=green>[SABUESO]</color> Rastro lejos de la salida. Caminando a la migaja.");
+                    _subFaseActual = SubFaseSigilo.SiguiendoRastro;
+                    _brain.ActualizarVelocidad(VelocidadSigilo);
+                    _brain.MoverHacia(_destinoActual);
+                }
+            }
+            else
+            {
+                Debug.Log("<color=grey>[SIGILO]</color> No hay migajas en memoria. Entrando a Escaneo (Stop & Scan).");
+                _subFaseActual = SubFaseSigilo.Escaneo;
+                _brain.ActualizarVelocidad(0f);
+                _temporizadorEscaneo = 0f;
+            }
         }
 
         public void Ejecutar()
         {
-            // 3. Método Ejecutar() (El motor lógico)
             switch (_subFaseActual)
             {
-                case SubFaseSigilo.Acercamiento:
-                    float distanciaAlOrigen = Vector3.Distance(_brain.transform.position, _brain.Data.posicionSospechosa);
-                    if (distanciaAlOrigen < 0.5f)
+                case SubFaseSigilo.Intercepcion:
+                    if (Vector3.Distance(_brain.transform.position, _brain.puntoEmboscada.position) < 0.5f)
                     {
-                        _subFaseActual = SubFaseSigilo.Escaneo;
                         _brain.ActualizarVelocidad(0f);
-                        _brain.MoverHacia(_brain.transform.position); // Detener el movimiento actual
+                    }
+                    break;
+
+                case SubFaseSigilo.SiguiendoRastro:
+                    if (Vector3.Distance(_brain.transform.position, _destinoActual) < 0.5f)
+                    {
+                        if (GestorRastro.Instance.TryObtenerMigaja(out _destinoActual))
+                        {
+                            _brain.MoverHacia(_destinoActual);
+                        }
+                        else
+                        {
+                            _subFaseActual = SubFaseSigilo.Escaneo;
+                            _temporizadorEscaneo = 0f;
+                            _brain.ActualizarVelocidad(0f);
+                        }
                     }
                     break;
 
@@ -54,52 +90,45 @@ namespace _Scripts.States
                     _temporizadorEscaneo += Time.deltaTime;
                     if (_temporizadorEscaneo > 2.5f)
                     {
-                        GenerarPuntosDePatrulla();
+                        for (int i = 0; i < 3; i++)
+                        {
+                            Vector3 direccionAleatoria = Random.insideUnitSphere * 4.0f;
+                            direccionAleatoria += _brain.transform.position;
+                            
+                            NavMeshHit hit;
+                            if (NavMesh.SamplePosition(direccionAleatoria, out hit, 4.0f, NavMesh.AllAreas))
+                            {
+                                _puntosMicroPatrulla[i] = hit.position;
+                            }
+                            else
+                            {
+                                _puntosMicroPatrulla[i] = _brain.transform.position;
+                            }
+                        }
+
                         _subFaseActual = SubFaseSigilo.MicroPatrulla;
-                        _brain.ActualizarVelocidad(_velocidadSigilo);
+                        _brain.ActualizarVelocidad(VelocidadSigilo);
                         _indexPatrulla = 0;
                         _brain.MoverHacia(_puntosMicroPatrulla[_indexPatrulla]);
                     }
                     break;
 
                 case SubFaseSigilo.MicroPatrulla:
-                    float distanciaAlPunto = Vector3.Distance(_brain.transform.position, _puntosMicroPatrulla[_indexPatrulla]);
-                    if (distanciaAlPunto < 0.5f)
+                    if (Vector3.Distance(_brain.transform.position, _puntosMicroPatrulla[_indexPatrulla]) < 0.5f)
                     {
-                        _indexPatrulla = (_indexPatrulla + 1) % _puntosMicroPatrulla.Length;
+                        _indexPatrulla = (_indexPatrulla + 1) % 3;
                         _brain.MoverHacia(_puntosMicroPatrulla[_indexPatrulla]);
                     }
                     break;
             }
         }
 
-        private void GenerarPuntosDePatrulla()
-        {
-            for (int i = 0; i < 3; i++)
-            {
-                Vector3 direccionAleatoria = Random.insideUnitSphere * 4.0f;
-                direccionAleatoria += _brain.Data.posicionSospechosa;
-                
-                NavMeshHit hit;
-                // Intentamos buscar un punto válido en el NavMesh cerca del punto aleatorio
-                if (NavMesh.SamplePosition(direccionAleatoria, out hit, 4.0f, NavMesh.AllAreas))
-                {
-                    _puntosMicroPatrulla[i] = hit.position;
-                }
-                else
-                {
-                    // Si falla, usamos el centro como respaldo
-                    _puntosMicroPatrulla[i] = _brain.Data.posicionSospechosa;
-                }
-            }
-        }
-
         public void Salir()
         {
-            // 4. Método Salir()
-            Debug.Log("Abandonando la búsqueda sigilosa.");
-            _temporizadorEscaneo = 0f; // Reseteamos por precaución
+            Debug.Log("Abortando el Sigilo. Limpiando variables internas del rastreo.");
+            _temporizadorEscaneo = 0f;
             _indexPatrulla = 0;
+            _destinoActual = Vector3.zero;
         }
     }
 }

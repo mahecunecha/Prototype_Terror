@@ -14,6 +14,10 @@ namespace _Scripts.Brains
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
     public class EnemyBrain : MonoBehaviour
     {
+        [Header("Conciencia Espacial (Intercepción)")]
+        public Transform puntoSalida;
+        public Transform puntoEmboscada;
+
         [Header("Referencias de Datos")]
         [Tooltip("El archivo de datos (SO) que compartimos con el jugador y el sistema")]
         [SerializeField] private IntuicionSystem data;
@@ -173,6 +177,7 @@ namespace _Scripts.Brains
         private void HandleSubirFase()
         {
             _nivelMiedoActual = Mathf.Clamp(_nivelMiedoActual + 1, 1, 4);
+            Debug.Log($"<color=orange>[CEREBRO]</color> ¡Ruido detectado! Miedo sube a Nivel {_nivelMiedoActual}");
             Debug.Log($"<color=orange>RADIO: El enemigo subió al Nivel {_nivelMiedoActual}</color>");
             ActualizarEstadoPorNivel();
         }
