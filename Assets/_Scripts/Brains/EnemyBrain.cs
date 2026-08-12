@@ -43,6 +43,9 @@ namespace _Scripts.Brains
         
         // Cacheamos las instancias de los estados para evitar asignaciones de memoria (GC Allocations)
         private IEstado _estadoRastreo;
+        private IEstado _estadoSigilo;
+        private IEstado _estadoPersecucion;
+        private IEstado _estadoSedDeSangre;
 
         [Header("Reloj de Recuperación")]
         // Contador de segundos para llegar al minuto de enfriamiento
@@ -70,6 +73,9 @@ namespace _Scripts.Brains
                 
             // OPTIMIZACIÓN: Instanciamos los estados una sola vez en el inicio
             _estadoRastreo = new EstadoRastreo(this);
+            _estadoSigilo = new EstadoSigilo(this);
+            _estadoPersecucion = new EstadoPersecucion(this);
+            _estadoSedDeSangre = new EstadoSedDeSangre(this);
             
             // ESTADO INICIAL: Iniciamos usando la referencia cacheada
             CambiarEstado(_estadoRastreo);
@@ -166,19 +172,35 @@ namespace _Scripts.Brains
 
         private void HandleSubirFase()
         {
-            _nivelMiedoActual++;
+            _nivelMiedoActual = Mathf.Clamp(_nivelMiedoActual + 1, 1, 4);
             Debug.Log($"<color=orange>RADIO: El enemigo subió al Nivel {_nivelMiedoActual}</color>");
-            // Nota: Aquí se cambiará al estado correspondiente cacheado en el futuro
+            ActualizarEstadoPorNivel();
         }
 
         private void HandleBajarFase()
         {
-            _nivelMiedoActual = Mathf.Max(1, _nivelMiedoActual - 1);
-            
-            // Si bajamos al nivel base, volvemos a usar la referencia cacheada de Rastreo
-            if (_nivelMiedoActual == 1) CambiarEstado(_estadoRastreo);
-            
+            _nivelMiedoActual = Mathf.Clamp(_nivelMiedoActual - 1, 1, 4);
             Debug.Log($"<color=cyan>RADIO: El enemigo bajó al Nivel {_nivelMiedoActual}</color>");
+            ActualizarEstadoPorNivel();
+        }
+
+        private void ActualizarEstadoPorNivel()
+        {
+            switch (_nivelMiedoActual)
+            {
+                case 1:
+                    CambiarEstado(_estadoRastreo);
+                    break;
+                case 2:
+                    CambiarEstado(_estadoSigilo);
+                    break;
+                case 3:
+                    CambiarEstado(_estadoPersecucion);
+                    break;
+                case 4:
+                    CambiarEstado(_estadoSedDeSangre);
+                    break;
+            }
         }
 
         /* * *

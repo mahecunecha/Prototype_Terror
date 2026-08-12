@@ -130,12 +130,10 @@ namespace _Scripts.Player
                     break;
             }
 
-            // D. LA MAGIA: Actualizamos la posición sospechosa...
-            dataIntuicion.posicionSospechosa = transform.position;
-            
-            // ... Y enviamos el paquete matemático al IntuicionSystem
+            // D. LA MAGIA: Enviamos el paquete matemático al IntuicionSystem
+            // delegando la decisión de si el monstruo lo escucha o no.
             // ¡Fíjate cómo usamos el Enum aquí como una etiqueta de envío!
-            dataIntuicion.ModificarIntuicion(volumenPaquete, distanciaAlEnemigo, perfilPaquete);
+            dataIntuicion.ModificarIntuicion(volumenPaquete, distanciaAlEnemigo, perfilPaquete, transform.position);
 
             // E. EL TEATRO: Reproducimos el archivo .wav real para asustar al jugador
             if (emisorDeSonido && clipFalsoParaHumano)

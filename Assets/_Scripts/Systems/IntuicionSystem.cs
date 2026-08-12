@@ -44,7 +44,7 @@ namespace _Scripts.Systems
          * decide cuánto asusta realmente al monstruo.
          */
         // ReSharper disable Unity.PerformanceAnalysis
-        public void ModificarIntuicion(float volumenOriginal, float distanciaAlMonstruo, _Scripts.Enums.PerfilAcustico perfil)
+        public void ModificarIntuicion(float volumenOriginal, float distanciaAlMonstruo, _Scripts.Enums.PerfilAcustico perfil, Vector3 origenRuido)
         {
             // Esta variable guardará el ruido final después de calcular la distancia
             float incrementoFinal = 0f;
@@ -65,16 +65,28 @@ namespace _Scripts.Systems
                     break;
             }
 
-            // 2. REGLA DEL 75% (Zona de Gracia)
-            // Si el monstruo ya está muy alterado (>0.75), los ruidos le afectan 3 veces menos.
-            // Así le damos al jugador una micro-oportunidad de escapar antes de pasar a Persecución.
-            if (intuicionActual >= 0.75f && incrementoFinal > 0)
+            // FILTRO DE RECEPCIÓN: ¿El sonido llegó con suficiente fuerza?
+            if (incrementoFinal > 0.05f)
             {
-                intuicionActual += (incrementoFinal / 3f);
+                // El monstruo lo escuchó. Guardamos el origen del ruido.
+                posicionSospechosa = origenRuido;
+
+                // 2. REGLA DEL 75% (Zona de Gracia)
+                // Si el monstruo ya está muy alterado (>0.75), los ruidos le afectan 3 veces menos.
+                // Así le damos al jugador una micro-oportunidad de escapar antes de pasar a Persecución.
+                if (intuicionActual >= 0.75f)
+                {
+                    intuicionActual += (incrementoFinal / 3f);
+                }
+                else
+                {
+                    intuicionActual += incrementoFinal;
+                }
             }
             else
             {
-                intuicionActual += incrementoFinal;
+                // El sonido se disipó antes de llegar. No hacemos nada.
+                return;
             }
 
             // 3. REGLA DE CASCADA (SUBIDA)

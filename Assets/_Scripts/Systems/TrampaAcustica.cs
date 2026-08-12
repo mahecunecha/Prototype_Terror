@@ -43,13 +43,11 @@ namespace _Scripts.Systems
 
                 if (dataIntuicion != null)
                 {
-                    dataIntuicion.posicionSospechosa = transform.position;
-
                     GameObject enemy = GameObject.FindGameObjectWithTag("Enemy");
                     if (enemy != null)
                     {
                         float distanciaAlMonstruo = Vector3.Distance(transform.position, enemy.transform.position);
-                        dataIntuicion.ModificarIntuicion(volumenAlerta, distanciaAlMonstruo, perfilAcustico);
+                        dataIntuicion.ModificarIntuicion(volumenAlerta, distanciaAlMonstruo, perfilAcustico, transform.position);
                     }
                 }
             }
