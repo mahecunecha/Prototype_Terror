@@ -18,7 +18,8 @@ namespace _Scripts.Player
         [SerializeField] private float velocidadRotacion = 10f; 
 
         [Header("Suavizado de Movimiento")] 
-        [SerializeField] private float smoothTime = 0.1f; 
+        [SerializeField] private float tiempoAceleracion = 0.25f;
+        [SerializeField] private float tiempoDesaceleracion = 0.35f;
         [SerializeField] private float rotationSmoothTime = 0.02f; 
         
         private Vector3 _velocitySmooth; 
@@ -147,7 +148,8 @@ namespace _Scripts.Player
 
             // === MOVIMIENTO FÍSICO ===
             Vector3 desiredVelocity = _direccionMovimiento * _velocidadActual;
-            _velocitySmooth = Vector3.SmoothDamp(_velocitySmooth, desiredVelocity, ref _velocitySmoothDerivative, smoothTime);
+            float tiempoSuavizadoActual = inputVector.magnitude > 0.1f ? tiempoAceleracion : tiempoDesaceleracion;
+            _velocitySmooth = Vector3.SmoothDamp(_velocitySmooth, desiredVelocity, ref _velocitySmoothDerivative, tiempoSuavizadoActual);
 
             if (TryGetComponent<CharacterController>(out var controller))
             {
@@ -165,7 +167,8 @@ namespace _Scripts.Player
         {
             float velocidadBase = velocidadCaminando; 
             _velocidadActual = Mathf.Lerp(velocidadBase, velocidadBase * 0.2f, factor);
-            smoothTime = Mathf.Lerp(smoothTime, smoothTime + 0.3f, factor);
+            tiempoAceleracion = Mathf.Lerp(0.25f, 0.55f, factor);
+            tiempoDesaceleracion = Mathf.Lerp(0.35f, 0.65f, factor);
             rotationSmoothTime = Mathf.Lerp(rotationSmoothTime, rotationSmoothTime + 0.3f, factor);
         }
     }

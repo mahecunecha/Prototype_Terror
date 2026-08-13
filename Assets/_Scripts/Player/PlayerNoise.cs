@@ -43,11 +43,13 @@ namespace _Scripts.Player
         [Tooltip("Cambia esto en Unity mientras juegas para probar los distintos ruidos")]
         public EstadoMovimiento estadoActual = EstadoMovimiento.Quieto;
 
-        // El segundero que cuenta el tiempo entre un paso y otro
-        private float _cronometroPulso = 0f;
+        private float _distanciaAcumulada = 0f;
+        private Vector3 _ultimaPosicion;
+        private float _distanciaParaPulso = 1f;
 
         private void Start()
         {
+            _ultimaPosicion = transform.position;
             // Cláusulas de salvaguarda: Avisamos si olvidaste conectar algo en el Inspector
             if (!dataIntuicion) Debug.LogError("PlayerNoise: Falta conectar el IntuicionSystem.");
             if (!transformEnemigo) Debug.LogError("PlayerNoise: Falta el Transform del Enemigo.");
@@ -59,36 +61,33 @@ namespace _Scripts.Player
             // Si falta el buzón de datos, no hacemos nada, para, evitar que el juego explote
             if (!dataIntuicion || !transformEnemigo) return;
 
-            // 1. EL RELOJ: Definimos qué tan rápido late el pulso según el estado
-            float tiempoEntrePulsos = 0f;
+            float distanciaFrame = Vector3.Distance(transform.position, _ultimaPosicion);
+            _distanciaAcumulada += distanciaFrame;
+            _ultimaPosicion = transform.position;
 
             switch (estadoActual)
             {
                 case EstadoMovimiento.Quieto: 
-                    _cronometroPulso = 0f; // Reseteamos el reloj
+                    _distanciaAcumulada = 0f; 
                     return; // Salimos del Update, no hay ruido que hacer
                 
                 case EstadoMovimiento.Agachado: 
-                    tiempoEntrePulsos = 1.2f; // Un pulso lento (mucho espacio entre pasos)
+                    _distanciaParaPulso = 1.2f; 
                     break;
                 
                 case EstadoMovimiento.Caminando: 
-                    tiempoEntrePulsos = 0.7f; // Un pulso normal
+                    _distanciaParaPulso = 1.5f; 
                     break;
                 
                 case EstadoMovimiento.Corriendo: 
-                    tiempoEntrePulsos = 0.3f; // Un pulso rapidísimo (pasos acelerados)
+                    _distanciaParaPulso = 1.8f; 
                     break;
             }
 
-            // 2. EL SEGUNDERO AVANZA
-            _cronometroPulso += Time.deltaTime;
-
-            // 3. EL DISPARO
-            if (_cronometroPulso >= tiempoEntrePulsos)
+            if (_distanciaAcumulada >= _distanciaParaPulso)
             {
                 EmitirRuidoDelPulso();
-                _cronometroPulso = 0f; // Vaciamos el reloj para empezar a contar el siguiente paso
+                _distanciaAcumulada = 0f;
             }
         }
 

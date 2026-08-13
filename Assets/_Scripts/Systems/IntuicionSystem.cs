@@ -25,6 +25,10 @@ namespace _Scripts.Systems
     [CreateAssetMenu(fileName = "NuevaIntuicion", menuName = "Sistema/Intuicion Data")]
     public class IntuicionSystem : ScriptableObject
     {
+        [Header("Atenuación Acústica (Pilar 3)")]
+        [SerializeField] private float distanciaMaximaAudicion = 25f;
+        [SerializeField] private AnimationCurve curvaAtenuacion = AnimationCurve.Linear(0f, 1f, 1f, 0f);
+
         [Header("Datos de la Fase (Escala 0.0 a 1.0)")]
         [Tooltip("El medidor de peligro de la fase actual")]
         [SerializeField] private float intuicionActual = 0f;
@@ -44,26 +48,18 @@ namespace _Scripts.Systems
          * decide cuánto asusta realmente al monstruo.
          */
         // ReSharper disable Unity.PerformanceAnalysis
-        public void ModificarIntuicion(float volumenOriginal, float distanciaAlMonstruo, _Scripts.Enums.PerfilAcustico perfil, Vector3 origenRuido)
+        public void ModificarIntuicion(float volumen, float distancia, _Scripts.Enums.PerfilAcustico perfil, Vector3 origenRuido)
         {
-            // Esta variable guardará el ruido final después de calcular la distancia
-            float incrementoFinal = 0f;
+            float perfilAcustico = (perfil == _Scripts.Enums.PerfilAcustico.AgudoVocal) ? 0.5f : 1.5f;
 
-            // 1. FILTRO MATEMÁTICO DE FRECUENCIAS (La magia del sonido)
-            switch (perfil)
-            { 
-                case _Scripts.Enums.PerfilAcustico.AgudoVocal:
-                    // REGLA AGUDA: Multiplicamos la distancia x 2.0
-                    // Si el monstruo está a 10m, el divisor será 20. El sonido se vuelve diminuto muy rápido.
-                    incrementoFinal = volumenOriginal / Mathf.Max(distanciaAlMonstruo * 2.0f, 0.1f);
-                    break;
+            // 1. Normalizamos la distancia (0 es al lado del enemigo, 1 es en el límite máximo de audición)
+            float distanciaNormalizada = Mathf.Clamp01(distancia / distanciaMaximaAudicion);
 
-                case _Scripts.Enums.PerfilAcustico.GraveFisico:
-                    // REGLA GRAVE: Multiplicamos la distancia x 0.3 (La reducimos)
-                    // Si el monstruo está a 10m, el divisor será solo 3. La vibración llega casi intacta.
-                    incrementoFinal = volumenOriginal / Mathf.Max(distanciaAlMonstruo * 0.3f, 0.1f);
-                    break;
-            }
+            // 2. Evaluamos la curva para obtener el porcentaje de sonido que sobrevive al viaje
+            float multiplicadorDistancia = curvaAtenuacion.Evaluate(distanciaNormalizada);
+
+            // 3. Calculamos el incremento final usando el volumen base, la curva y el perfil
+            float incrementoFinal = volumen * multiplicadorDistancia * perfilAcustico;
 
             // FILTRO DE RECEPCIÓN: ¿El sonido llegó con suficiente fuerza?
             if (incrementoFinal > 0.05f)

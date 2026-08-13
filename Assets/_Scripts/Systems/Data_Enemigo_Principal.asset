@@ -12,6 +12,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd938d6e69397d316ba85446da156fb1, type: 3}
   m_Name: Data_Enemigo_Principal
   m_EditorClassIdentifier: 
+  distanciaMaximaAudicion: 25
+  curvaAtenuacion:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0.024999492
+      value: 0.9905805
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.9833374
+      value: 0.125
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   intuicionActual: 0
   posicionSospechosa: {x: 0, y: 0, z: 0}
-  

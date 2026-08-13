@@ -121,8 +121,30 @@
                 },
                 {
                     "name": "",
+                    "id": "fc7ce87b-7e25-4f25-80cf-6c38bf008e92",
+                    "path": "<Keyboard>/leftShift",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Sprint",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "7aff7f1f-414f-47d6-a334-fedd5f7e544f",
                     "path": "<XInputController>/leftStick/down",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Crouch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "63bd669e-5c9f-4f71-bcfb-19f159c796b2",
+                    "path": "<Keyboard>/c",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
